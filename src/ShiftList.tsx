@@ -30,24 +30,41 @@ export default function ShiftList() {
     userId: string;
   }>();
   const [playlist, setPlaylist] = React.useState<any>();
+  const [tracks, setTracks] = React.useState<any[]>([]);
   const [albums, setAlbums] = React.useState<any[]>([]);
   const [shiftTracks, setShiftTracks] = React.useState<any[]>([]);
 
   // Load playlist and albums for each track
   React.useEffect(() => {
     (async () => {
+      // Reset state
+      setTracks([]);
+      setAlbums([]);
+
       const playlist = await s.getPlaylist(playlistId);
       console.log("PLAYLIST", playlist);
       setPlaylist(playlist);
 
-      const albumIds = playlist.tracks.items.map(
+      const results = await Promise.all(
+        R.times(async (index) => {
+          const _tracks = await s.getPlaylistTracks(playlistId, {
+            limit: 100,
+            offset: index * 100,
+          });
+          console.log(`TRACKS [chunk ${index}]`, _tracks);
+          setTracks(R.concat(_tracks.items));
+          return _tracks.items;
+        }, Math.ceil(playlist.tracks.total / 100))
+      );
+
+      const albumIds = R.flatten(results).map(
         R.path<any>(["track", "album", "id"])
       );
 
       // Spotify only allows 20 ids per call
       R.splitEvery(20, albumIds).map(async (chunck, index) => {
         const results = await s.getAlbums(chunck);
-        console.log(`ALBUMS [chunck ${index}]`, results);
+        console.log(`ALBUMS [chunk ${index}]`, results);
         setAlbums(R.concat(results.albums));
       });
     })();
@@ -68,30 +85,40 @@ export default function ShiftList() {
 
   // Create playlist
   const createPlaylist = React.useCallback(async () => {
-    s.createPlaylist(userId, {});
+    const newPlaylist = await s.createPlaylist(userId, {
+      name: `${playlist.name} SHIFTED!`,
+      public: playlist.public,
+    });
+    console.log("CREATE PLAYLIST", newPlaylist);
+    await R.splitEvery(100, shiftTracks.map<string>(R.prop("uri"))).map(
+      async (uris: string[], index) => {
+        console.log(`ADD TRACKS [chunk ${index}]`, uris);
+        await s.addTracksToPlaylist(newPlaylist.id, uris);
+      }
+    );
+    alert("Your playlist has been created!");
   }, [shiftTracks]);
 
   return (
     <div>
       <Title>{`${playlist?.name ?? playlistId}`}</Title>
       <Buttons>
-        <Link to="/">Back</Link>
+        <Link to={`/${userId}`}>Back</Link>
         <button onClick={generateShift}>SHIFT!</button>
       </Buttons>
 
       <Table>
         <thead>
           <tr>
-            <th>Track</th>
+            <th>Track ({tracks.length})</th>
             <th>Shifted track</th>
             <th>Album</th>
           </tr>
         </thead>
         <tbody>
-          {playlist?.tracks.items.map(
+          {tracks.map(
             ({ track: { id, name, album, artists } }: any, index: number) => {
               const shiftedTrack = shiftTracks[index];
-              console.log(shiftedTrack);
 
               return (
                 <tr key={id}>
@@ -99,13 +126,15 @@ export default function ShiftList() {
                     <strong>{artists.map(R.prop("name")).join(", ")}</strong>
                     {` - ${name}`}
                   </td>
-                  {shiftedTrack && (
+                  {shiftedTrack ? (
                     <td>
                       <strong>
                         {shiftedTrack.artists.map(R.prop("name")).join(", ")}
                       </strong>
                       {` - ${shiftedTrack.name}`}
                     </td>
+                  ) : (
+                    <td>-</td>
                   )}
                   <td>
                     {`${
@@ -118,6 +147,11 @@ export default function ShiftList() {
           )}
         </tbody>
       </Table>
+      {!R.isEmpty(shiftTracks) && (
+        <div>
+          <button onClick={createPlaylist}>Create playlist!</button>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,6 +21,7 @@ export const restoreAccessToken = async () => {
       console.log("USER", user);
       return user;
     } catch (err) {
+      clearSession();
       console.log("User token not valid");
       return null;
     }
@@ -41,7 +42,7 @@ export const authorize = () => {
       response_type: "token",
       redirect_uri: "http://localhost:3000",
       scope:
-        "playlist-read-private,playlist-read-collaborative,playlist-modify-private",
+        "playlist-read-private,playlist-read-collaborative,playlist-modify-private,playlist-modify-public",
     })}`
   );
 };

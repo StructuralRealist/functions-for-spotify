@@ -38,6 +38,7 @@ const ImagePlaceholder = styled.div`
 export default function Playlists() {
   const { userId } = useParams<{ userId: string }>();
   const [playlists, setPlaylists] = React.useState<any[]>([]);
+
   React.useEffect(() => {
     s.getUserPlaylists().then((data) => {
       setPlaylists(data.items);
