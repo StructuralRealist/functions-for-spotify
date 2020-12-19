@@ -39,7 +39,7 @@ export const authorize = () => {
     `${AUTH_ENDPOINT}?${Qs.stringify({
       client_id: CLIENT_ID,
       response_type: "token",
-      redirect_uri: "https://4s4xs.csb.app",
+      redirect_uri: "http://localhost:3000",
       scope:
         "playlist-read-private,playlist-read-collaborative,playlist-modify-private",
     })}`
