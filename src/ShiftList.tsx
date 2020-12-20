@@ -41,27 +41,28 @@ export default function ShiftList() {
       setTracks([]);
       setAlbums([]);
 
+      // Get the playlist details
       const playlist = await s.getPlaylist(playlistId);
       console.log("PLAYLIST", playlist);
       setPlaylist(playlist);
 
-      const results = await Promise.all(
-        R.times(async (index) => {
-          const _tracks = await s.getPlaylistTracks(playlistId, {
-            limit: 100,
-            offset: index * 100,
-          });
-          console.log(`TRACKS [chunk ${index}]`, _tracks);
-          setTracks(R.concat(_tracks.items));
-          return _tracks.items;
-        }, Math.ceil(playlist.tracks.total / 100))
-      );
+      // Get the tracks (in order)
+      let results: any[] = [];
+      for (let i = 0; i < Math.ceil(playlist.tracks.total / 100); i++) {
+        const _tracks = await s.getPlaylistTracks(playlistId, {
+          limit: 100,
+          offset: i * 100,
+        });
+        console.log(`TRACKS [chunk ${i}]`, _tracks);
+        setTracks(R.concat(R.__, _tracks.items));
+        results = results.concat(_tracks.items);
+      }
 
       const albumIds = R.flatten(results).map(
         R.path<any>(["track", "album", "id"])
       );
 
-      // Spotify only allows 20 ids per call
+      // Get the album details (order not important)
       R.splitEvery(20, albumIds).map(async (chunck, index) => {
         const results = await s.getAlbums(chunck);
         console.log(`ALBUMS [chunk ${index}]`, results);
@@ -78,7 +79,7 @@ export default function ShiftList() {
       R.map((id) => albums.find(R.whereEq({ id }))),
       R.map(R.pathOr([], ["tracks", "items"])),
       R.map(random)
-    )(playlist.tracks.items);
+    )(tracks);
 
     setShiftTracks(newTracks);
   }, [playlist, albums]);
@@ -90,12 +91,18 @@ export default function ShiftList() {
       public: playlist.public,
     });
     console.log("CREATE PLAYLIST", newPlaylist);
-    await R.splitEvery(100, shiftTracks.map<string>(R.prop("uri"))).map(
-      async (uris: string[], index) => {
-        console.log(`ADD TRACKS [chunk ${index}]`, uris);
-        await s.addTracksToPlaylist(newPlaylist.id, uris);
-      }
+    const uriBatches = R.splitEvery(
+      100,
+      shiftTracks.map<string>(R.prop("uri"))
     );
+    // Add tracks (in order)
+    let i = 0;
+    for await (let uris of uriBatches) {
+      console.log(`ADD TRACKS [chunk ${i}]`, uris);
+      await s.addTracksToPlaylist(newPlaylist.id, uris);
+      i++;
+    }
+
     alert("Your playlist has been created!");
   }, [shiftTracks]);
 

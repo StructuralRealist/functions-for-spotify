@@ -36,15 +36,13 @@ export const clearSession = () => {
 };
 
 export const authorize = () => {
-  window.open(
-    `${AUTH_ENDPOINT}?${Qs.stringify({
-      client_id: CLIENT_ID,
-      response_type: "token",
-      redirect_uri: "http://localhost:3000",
-      scope:
-        "playlist-read-private,playlist-read-collaborative,playlist-modify-private,playlist-modify-public",
-    })}`
-  );
+  window.location.href = `${AUTH_ENDPOINT}?${Qs.stringify({
+    client_id: CLIENT_ID,
+    response_type: "token",
+    redirect_uri: "http://localhost:3000",
+    scope:
+      "playlist-read-private,playlist-read-collaborative,playlist-modify-private,playlist-modify-public",
+  })}`;
 };
 
 export default s;
