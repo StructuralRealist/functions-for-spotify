@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import { authorize, restoreAccessToken, clearSession } from "./spotify";
 import Playlists from "./Playlists";
-import ShiftList from "./ShiftList";
+import PivotForm from "./PivotForm";
 import GlobalStyles from "./GlobalStyles";
 import logo from "./logo.png";
 
@@ -15,6 +15,10 @@ const Main = styled.main`
   flex-direction: column;
   align-items: center;
   margin: 0 auto;
+`;
+
+const Session = styled.div`
+  margin-bottom: 40px;
 `;
 
 const AppLogo = styled.div`
@@ -51,7 +55,7 @@ export default function App() {
           <img src={logo} alt="" />
         </AppLogo>
         {user && (
-          <div>
+          <Session>
             Logged in as{" "}
             <a
               href={user.external_urls?.spotify}
@@ -68,11 +72,11 @@ export default function App() {
             >
               Log out
             </button>
-          </div>
+          </Session>
         )}
         {user ? (
           <Switch>
-            <Route path="/:userId/:playlistId" component={ShiftList} />
+            <Route path="/:userId/:playlistId" component={PivotForm} />
             <Route path="/:userId" component={Playlists} />
           </Switch>
         ) : (
