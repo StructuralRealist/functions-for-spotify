@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useHistory } from "react-router-dom";
 import styled from "styled-components";
 import * as R from "ramda";
 import random from "random-item";
@@ -25,6 +25,7 @@ const Table = styled.table`
 `;
 
 export default function ShiftList() {
+  const history = useHistory();
   const { playlistId, userId } = useParams<{
     playlistId: string;
     userId: string;
@@ -33,6 +34,10 @@ export default function ShiftList() {
   const [tracks, setTracks] = React.useState<any[]>([]);
   const [albums, setAlbums] = React.useState<any[]>([]);
   const [shiftTracks, setShiftTracks] = React.useState<any[]>([]);
+  const [playlistForm, setPlaylistForm] = React.useState({
+    public: false,
+    name: "",
+  });
 
   // Load playlist and albums for each track
   React.useEffect(() => {
@@ -87,8 +92,8 @@ export default function ShiftList() {
   // Create playlist
   const createPlaylist = React.useCallback(async () => {
     const newPlaylist = await s.createPlaylist(userId, {
-      name: `${playlist.name} SHIFTED!`,
-      public: playlist.public,
+      name: playlistForm.name,
+      public: playlistForm.public,
     });
     console.log("CREATE PLAYLIST", newPlaylist);
     const uriBatches = R.splitEvery(
@@ -104,22 +109,46 @@ export default function ShiftList() {
     }
 
     alert("Your playlist has been created!");
-  }, [shiftTracks]);
+    history.push(`/${userId}`);
+  }, [shiftTracks, playlistForm]);
 
   return (
     <div>
       <Title>{`${playlist?.name ?? playlistId}`}</Title>
       <Buttons>
         <Link to={`/${userId}`}>Back</Link>
-        <button onClick={generateShift}>SHIFT!</button>
+        <button onClick={generateShift}>Pivot!</button>
+        {!R.isEmpty(shiftTracks) && (
+          <>
+            <input
+              type="text"
+              placeholder="Playlist name"
+              value={playlistForm.name}
+              onChange={(e) => setPlaylistForm(R.assoc("name", e.target.value))}
+            />
+            <label htmlFor="">
+              <input
+                type="checkbox"
+                value="on"
+                checked={playlistForm.public}
+                onChange={() =>
+                  setPlaylistForm(R.assoc("public", !playlistForm.public))
+                }
+              />
+              {" Public"}
+            </label>
+            <button onClick={createPlaylist} disabled={!playlistForm.name}>
+              Create playlist
+            </button>
+          </>
+        )}
       </Buttons>
 
       <Table>
         <thead>
           <tr>
-            <th>Track ({tracks.length})</th>
-            <th>Shifted track</th>
-            <th>Album</th>
+            <th>Tracks ({tracks.length})</th>
+            <th>New tracks</th>
           </tr>
         </thead>
         <tbody>
@@ -143,22 +172,12 @@ export default function ShiftList() {
                   ) : (
                     <td>-</td>
                   )}
-                  <td>
-                    {`${
-                      albums.find(R.whereEq({ id: album.id }))?.name ?? "..."
-                    }`}
-                  </td>
                 </tr>
               );
             }
           )}
         </tbody>
       </Table>
-      {!R.isEmpty(shiftTracks) && (
-        <div>
-          <button onClick={createPlaylist}>Create playlist!</button>
-        </div>
-      )}
     </div>
   );
 }

@@ -5,6 +5,8 @@ import styled from "styled-components";
 import { authorize, restoreAccessToken, clearSession } from "./spotify";
 import Playlists from "./Playlists";
 import ShiftList from "./ShiftList";
+import GlobalStyles from "./GlobalStyles";
+import logo from "./logo.png";
 
 const Main = styled.main`
   width: 100%;
@@ -13,13 +15,14 @@ const Main = styled.main`
   flex-direction: column;
   align-items: center;
   margin: 0 auto;
-  font-family: "Anonymous Pro", monospace;
 `;
 
-const AppName = styled.h1`
-  font-family: "Major Mono Display", sans-serif;
-  font-size: 48px;
-  text-transform: uppercase;
+const AppLogo = styled.div`
+  padding: 40px;
+  img {
+    height: auto;
+    width: 200px;
+  }
 `;
 
 export default function App() {
@@ -41,42 +44,47 @@ export default function App() {
   }, [user?.id]);
 
   return (
-    <Main>
-      <AppName>ShiftList</AppName>
-      {user && (
-        <div>
-          Logged in as{" "}
-          <a
-            href={user.external_urls?.spotify}
-            target="_blank"
-            rel="nofollow noopener noreferrer"
-          >
-            {user.display_name}
-          </a>{" "}
+    <>
+      <GlobalStyles />
+      <Main>
+        <AppLogo>
+          <img src={logo} alt="" />
+        </AppLogo>
+        {user && (
+          <div>
+            Logged in as{" "}
+            <a
+              href={user.external_urls?.spotify}
+              target="_blank"
+              rel="nofollow noopener noreferrer"
+            >
+              {user.display_name}
+            </a>{" "}
+            <button
+              onClick={() => {
+                clearSession();
+                setUser(null);
+              }}
+            >
+              Log out
+            </button>
+          </div>
+        )}
+        {user ? (
+          <Switch>
+            <Route path="/:userId/:playlistId" component={ShiftList} />
+            <Route path="/:userId" component={Playlists} />
+          </Switch>
+        ) : (
           <button
             onClick={() => {
-              clearSession();
-              setUser(null);
+              authorize();
             }}
           >
-            Log out
+            Log in to Spotify
           </button>
-        </div>
-      )}
-      {user ? (
-        <Switch>
-          <Route path="/:userId/:playlistId" component={ShiftList} />
-          <Route path="/:userId" component={Playlists} />
-        </Switch>
-      ) : (
-        <button
-          onClick={() => {
-            authorize();
-          }}
-        >
-          Log in to Spotify
-        </button>
-      )}
-    </Main>
+        )}
+      </Main>
+    </>
   );
 }

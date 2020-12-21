@@ -1,7 +1,6 @@
 import Qs from "qs";
 import Spotify from "spotify-web-api-js";
 
-const CLIENT_ID = "bbdb8aeebf8c4f019d14983574e918fb";
 const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize";
 
 const s = new Spotify();
@@ -37,9 +36,9 @@ export const clearSession = () => {
 
 export const authorize = () => {
   window.location.href = `${AUTH_ENDPOINT}?${Qs.stringify({
-    client_id: CLIENT_ID,
+    client_id: process.env.REACT_APP_CLIENT_ID,
     response_type: "token",
-    redirect_uri: "http://localhost:3000",
+    redirect_uri: process.env.REACT_APP_REDIRECT_URI,
     scope:
       "playlist-read-private,playlist-read-collaborative,playlist-modify-private,playlist-modify-public",
   })}`;
