@@ -20,7 +20,8 @@ export default createGlobalStyle`
   
   button {
     background-color: var(--secondary);
-    color: white;
+    color: black;
+    font-weight: bold;
     border: none;
     padding: 2px 12px;
     border-radius: 40px;
