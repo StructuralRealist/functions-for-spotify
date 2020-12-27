@@ -44,4 +44,4 @@ export const authorize = () => {
   })}`;
 };
 
-export default s;
+export default s

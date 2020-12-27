@@ -4,7 +4,7 @@ import styled from "styled-components";
 import * as R from "ramda";
 
 import s from "./spotify";
-import { sameAlbum } from "./pivots";
+import { sameAlbum } from "./functions";
 
 const Container = styled.div`
   width: 100%;
@@ -52,7 +52,7 @@ const Table = styled.table`
   }
 `;
 
-export default function PivotForm() {
+export default function FunctionsTable() {
   const history = useHistory();
   const { playlistId, userId } = useParams<{
     playlistId: string;
@@ -118,7 +118,7 @@ export default function PivotForm() {
       <Table>
         <thead>
           <tr>
-            <th colSpan={2}>Pivot rule</th>
+            <th colSpan={2}>Function</th>
           </tr>
         </thead>
         <tbody>

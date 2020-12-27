@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import { authorize, restoreAccessToken, clearSession } from "./spotify";
 import Playlists from "./Playlists";
-import PivotForm from "./PivotForm";
+import FunctionsTable from "./FunctionsTable";
 import GlobalStyles from "./GlobalStyles";
 import logo from "./logo.png";
 
@@ -76,7 +76,7 @@ export default function App() {
         )}
         {user ? (
           <Switch>
-            <Route path="/:userId/:playlistId" component={PivotForm} />
+            <Route path="/:userId/:playlistId" component={FunctionsTable} />
             <Route path="/:userId" component={Playlists} />
           </Switch>
         ) : (
